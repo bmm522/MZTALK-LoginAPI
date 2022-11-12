@@ -1,13 +1,7 @@
 package com.loginAPI.filter;
 
 import java.io.IOException;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.sql.Timestamp;
-import java.util.Base64;
-import java.util.Date;
+import java.util.Map;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -20,10 +14,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.loginAPI.auth.PrincipalDetails;
+import com.loginAPI.jwt.JwtTokenFactory;
 import com.loginAPI.model.User;
 import com.loginAPI.properties.JwtProperties;
 import com.loginAPI.properties.LoginStatusProperties;
@@ -31,7 +24,7 @@ import com.loginAPI.properties.LoginStatusProperties;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFilter{
+public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 	
 	private final AuthenticationManager authenticationManager;
 	
@@ -55,7 +48,6 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
 				return authentication;
 			}
 					
-					
 
 			PrincipalDetails principalDetails = null;
 			try {
@@ -78,58 +70,11 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
 			Authentication authResult) throws IOException, ServletException {
 		PrincipalDetails principalDetails = (PrincipalDetails) authResult.getPrincipal();
 		
-		String refreshToken = getRefreshToken();
+		Map<String,String> jwtTokenAndRefreshToken = new JwtTokenFactory().getJwtToken(principalDetails.getUser());
 		
-		String createDate = getCreateDate(principalDetails.getUser().getCreateDate());
-		
-		String jwtToken = JWT.create()
-				.withSubject(principalDetails.getUsername())
-				.withExpiresAt(new Date(System.currentTimeMillis()+JwtProperties.EXPIRATION_TIME))
-				.withClaim("id", principalDetails.getUser().getId())
-				.withClaim("username",principalDetails.getUser().getUsername())
-				.withClaim("nickname",principalDetails.getUser().getNickname())
-				.withClaim("email",principalDetails.getUser().getEmail())
-				.withClaim("birth",principalDetails.getUser().getBirth())
-				.withClaim("phone",principalDetails.getUser().getPhone())
-				.withClaim("address",principalDetails.getUser().getAddress())
-				.withClaim("roles",principalDetails.getUser().getRoles())
-				.withClaim("provider",principalDetails.getUser().getProvider())
-				.withClaim("providerId",principalDetails.getUser().getProviderId())
-				.withClaim("createDate",createDate)
-				.sign(Algorithm.HMAC512(JwtProperties.SECRET+refreshToken));
-		
-		response.addHeader(JwtProperties.HEADER_STRING, JwtProperties.TOKEN_PREFIX+jwtToken);
-		response.addHeader("RefreshToken", "RefreshToken "+refreshToken);
+		response.addHeader(JwtProperties.HEADER_STRING, JwtProperties.TOKEN_PREFIX+jwtTokenAndRefreshToken.get("jwtToken"));
+		response.addHeader("RefreshToken", "RefreshToken "+jwtTokenAndRefreshToken.get("refreshToken"));
 	}
 
-	
 
-	private String getCreateDate(Timestamp createDate) {
-		  java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		return formatter.format(createDate);
-	}
-	
-	private String getRefreshToken() {
-		MessageDigest md = null;
-		String randomByte = getRandomByte();
-		try {
-			md = MessageDigest.getInstance("SHA-256");
-			md.update(randomByte.getBytes());
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-		return String.format("%064x", new BigInteger(1, md.digest()));
-	}
-	
-	private String getRandomByte() {
-		byte[] randomByte = null;
-		try {
-			SecureRandom random = SecureRandom.getInstance("SHA1PRNG");
-			randomByte = new byte[16];
-			random.nextBytes(randomByte);
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-		return new String(Base64.getEncoder().encode(randomByte));
-	}
 }
