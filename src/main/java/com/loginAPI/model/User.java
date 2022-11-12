@@ -33,17 +33,11 @@ public class User {
 	private String birth;
 	private String phone;
 	private String address;
-	private String roles;
+	private String role;
 	private String provider;
 	private String providerId;
 	@CreationTimestamp
 	private Timestamp createDate;
 	
-	
-	public List<String> getRoleList(){
-		if(this.roles.length() > 0) {
-			return Arrays.asList(this.roles.split(","));
-		}
-		return new ArrayList<>();
-	}
+
 }

@@ -1,12 +1,16 @@
 package com.loginAPI.oauth;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import com.loginAPI.jwt.JwtTokenFactory;
 import com.loginAPI.model.User;
 import com.loginAPI.oauth.provider.FacebookUserInfo;
 import com.loginAPI.oauth.provider.GoogleUserInfo;
@@ -34,12 +38,33 @@ public class PrincipalSocialOAuth2UserService extends DefaultOAuth2UserService{
 		
 		User user = getUser(socialProviderUserInfo);
 	
+		Map<String,String> jwtTokenAndRefreshToken = new JwtTokenFactory().getJwtToken(user);
+			
+
 		
 		return super.loadUser(userRequest);
 	}
 
+
+
 	private User getUser(SocialProviderUserInfo socialProviderUserInfo) {
+		String provider = socialProviderUserInfo.getProvider();
+		String providerId = socialProviderUserInfo.getProviderId();
+		String username = provider+"_"+providerId;
 		
-		return null;
+		User user = userRepository.findByUsername(username);
+		
+		if(user == null) {
+			user = User.builder()
+					.username(username)
+					.email(socialProviderUserInfo.getEmail())
+					.role("ROLE_USER")
+					.provider(provider)
+					.providerId(providerId)
+					.build();
+			userRepository.save(user);
+		}
+		return user;
 	}
+	
 }
