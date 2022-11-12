@@ -1,0 +1,51 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: login-api
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/security?serverTimezone=Asia/Seoul
+    username: bmm5222
+    password: dlquf!2tkfkd!2
+
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+      show-sql: true
+
+  security:
+    oauth2.client:
+      registration:
+        google:
+          clientId: 453964265444-padfb9m3t4o8tv2cj3j2a8kgkcimk94s.apps.googleusercontent.com
+          clientSecret: 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
+          scope:
+            - email
+            - profile
+
+  app:
+    auth:
+      tokenSecret: MZTALKSecret
+      tokenExpiry: 1800000
+    oauth2:
+      authorizedRedirectUris:
+        - http://localhost:3000/oauth/redirect
+
+
+eureka:
+  instance:
+    instance-id: login-api
+    
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+
+
