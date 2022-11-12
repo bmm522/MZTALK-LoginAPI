@@ -31,23 +31,24 @@ public class PrincipalSocialOAuth2UserService extends DefaultOAuth2UserService{
 	@Override
 	public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 		OAuth2User oauth2User = super.loadUser(userRequest);
-		
+		System.out.println("실행");
 		SocialProviderUserInfo socialProviderUserInfo = null;
-		
+		System.out.println(2);
 		switch(userRequest.getClientRegistration().getRegistrationId()) {
 		case "google": socialProviderUserInfo = new GoogleUserInfo(oauth2User.getAttributes()); break;
 		case "facebook": socialProviderUserInfo = new FacebookUserInfo(oauth2User.getAttributes()); break;
 		case "naver": socialProviderUserInfo = new NaverUserInfo(oauth2User.getAttributes()); break;
 		}
 		
+		System.out.println(1);
 		User user = getUser(socialProviderUserInfo);
-				
-		postToFront(new JwtTokenFactory().getJwtToken(user));
-
+		System.out.println(user);		
+		Map<String, String> jwtToken = new JwtTokenFactory().getJwtToken(user);
+		System.out.println(jwtToken.get("jwtToken"));
+		System.out.println(jwtToken.get("refreshToken"));
 		
 		return super.loadUser(userRequest);
 	}
-
 
 
 	private void postToFront(Map<String, String> jwtToken) {

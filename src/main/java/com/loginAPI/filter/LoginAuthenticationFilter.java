@@ -34,6 +34,7 @@ public class LoginAuthenticationFilter extends UsernamePasswordAuthenticationFil
 		try {
 			ObjectMapper om = new ObjectMapper();
 			User user = om.readValue(request.getInputStream(), User.class);
+			System.out.println(user);
 			System.out.println("user : "+user.getProvider());
 			System.out.println("username : "+user.getUsername());
 			UsernamePasswordAuthenticationToken authenticationToken = 
