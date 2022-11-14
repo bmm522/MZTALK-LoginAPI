@@ -3,6 +3,8 @@ package com.loginAPI.controller;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.repository.query.Param;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,7 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.loginAPI.model.User;
+import com.loginAPI.oauth.KakaoOAuth2LoginService;
 import com.loginAPI.service.EmailAuthService;
+import com.loginAPI.service.KakaoLoginService;
 import com.loginAPI.service.PhoneAuthService;
 import com.loginAPI.service.RegisterService;
 import com.loginAPI.service.UserNameDuplicateCheckService;
@@ -23,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @Slf4j
 public class LoginAPIController {
+	
+	@Autowired
+	private KakaoOAuth2LoginService kakaoOAuth2LoginService;
 	@Autowired
 	private RegisterService registerService;
 	@Autowired
@@ -56,6 +63,14 @@ public class LoginAPIController {
 		return phoneAuthService.phoneAuth(asString(phone,"phone"));
 
 	}
+	
+	@ResponseBody
+	@GetMapping("/auth/kakao/callback")
+	public ReponseEntity<?> kakaoLogin(@Param(value = "code")String code){
+		return kakaoOAuth2LoginService.getKakaoUserInfo(code);
+		
+	}
+
 
 	
 	private String asString(String data,String dataname) {
