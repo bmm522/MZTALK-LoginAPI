@@ -37,8 +37,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		.httpBasic().disable()
 		.addFilter(new LoginAuthenticationFilter(authenticationManager()))
 		.authorizeRequests()
-		.anyRequest().permitAll()
-		.and();
+		.anyRequest().permitAll();
 //		.oauth
 //		.userInfoEndpoint()
 //		.userService(principalSocialOAuth2UserService);

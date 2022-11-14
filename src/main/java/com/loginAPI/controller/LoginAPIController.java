@@ -3,9 +3,9 @@ package com.loginAPI.controller;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +16,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.loginAPI.model.User;
 import com.loginAPI.oauth.KakaoOAuth2LoginService;
+import com.loginAPI.oauth.KakaoRedirectService;
 import com.loginAPI.service.EmailAuthService;
 import com.loginAPI.service.PhoneAuthService;
 import com.loginAPI.service.RegisterService;
@@ -28,6 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class LoginAPIController {
 	
+	
+	@Autowired
+	private KakaoRedirectService kakaoRedirectService;
 	@Autowired
 	private KakaoOAuth2LoginService kakaoOAuth2LoginService;
 	@Autowired
@@ -66,11 +70,30 @@ public class LoginAPIController {
 
 	}
 	
+	@PostMapping("/test2")
+	public void test2() {
+		System.out.println("실행됨");
+	}
+	
+	
 	@ResponseBody
-	@GetMapping("/auth/kakao/callback")
-	public ResponseEntity<?> kakaoLogin(@Param(value = "code")String code){
-		return kakaoOAuth2LoginService.getKakaoUserInfo(code);
-		
+	@PostMapping("/redirect/kakao")
+	public ResponseEntity<?> moveKakaoLoginRedirect() {
+		return kakaoRedirectService.moveKakaoLoginRedirect();
+	}
+	
+//	@ResponseBody
+//	@GetMapping("/auth/kakao/callback")
+//	public ResponseEntity<?> kakaoLogin(@Param(value = "code")String code){
+//		return kakaoOAuth2LoginService.getKakaoUserInfo(code);
+//		
+//	}
+	
+	@ResponseBody
+	@PostMapping("/oauth/kakao")
+	public Map<String,String> oauth2KakaoLogin(@RequestBody String accessToken){
+		System.out.println("실행됨");
+		return kakaoOAuth2LoginService.getKakaoUserInfo(asString(accessToken,"accessToken"));
 	}
 
 

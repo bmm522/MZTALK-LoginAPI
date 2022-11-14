@@ -1,9 +1,9 @@
 package com.loginAPI.oauth;
 
-import org.springframework.http.ResponseEntity;
+import java.util.Map;
 
 public interface KakaoOAuth2LoginService {
 
-	ResponseEntity<?> getKakaoUserInfo(String code);
+	 Map<String,String> getKakaoUserInfo(String code);
 
 }

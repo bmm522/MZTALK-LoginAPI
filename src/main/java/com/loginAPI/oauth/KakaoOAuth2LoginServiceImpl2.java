@@ -28,14 +28,14 @@ import com.loginAPI.model.KakaoOAuthToken;
 import com.loginAPI.model.User;
 import com.loginAPI.properties.JwtProperties;
 import com.loginAPI.repository.UserRepository;
-import com.loginAPI.service.RegisterServiceImpl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@Service
 @Slf4j
 @RequiredArgsConstructor
-public class KakaoOAuth2LoginServiceImpl implements KakaoOAuth2LoginService{
+public class KakaoOAuth2LoginServiceImpl2 implements KakaoOAuth2LoginService{
 
 	
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
@@ -43,17 +43,45 @@ public class KakaoOAuth2LoginServiceImpl implements KakaoOAuth2LoginService{
 	private final UserRepository userRepository;
 	
 	@Override
-	public ResponseEntity<?> getKakaoUserInfo(String code) {
+	public  Map<String,String> getKakaoUserInfo(String accessToken) {
+		System.out.println("11111111111111111111");
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("Authorization", "Bearer "+accessToken);
+		headers.add("Content-type","application/x-www-form-urlencoded;charset=utf-8");
 
-		KakaoOAuthToken kakaoOAuthToken= null;
-		try {
-			kakaoOAuthToken = getAccessToken(kakaoOAuthToken,code);
-		} catch (JsonMappingException e) {
-			log.error("JSON  and Entity don`t  match ");
-		} catch(JsonProcessingException e) {
-			log.error("JSON  Proccessiong error ");
+		ResponseEntity<String> response = getResponseForUserInfo(new HttpEntity<>(headers));
+		System.out.println("2222222222222222222");
+		HashMap<String, String> userInfoMap = getKakaoUserInfoMap(response);
+		
+		String provider = "KAKAO";
+		String providerId = userInfoMap.get("id");
+		
+		String kakaoUsername = provider+"_"+providerId;
+		String kakaoPassword = UUID.randomUUID().toString();
+		User user = userRepository.findByUsername(kakaoUsername);
+		System.out.println("33333333333333333");
+		if(user==null) {
+			user = User.builder()
+					.username(kakaoUsername)
+					.password(bCryptPasswordEncoder.encode(kakaoPassword))
+					.email(userInfoMap.get("email"))
+					.provider(provider)
+					.providerId(providerId)
+					.build();
+			
+			userRepository.save(user);
+
 		}
-		return KakaoLogin( getKakaoUserInfoFromResourceServer(kakaoOAuthToken));
+		System.out.println("444444444444444444");
+		return new JwtTokenFactory().getJwtToken(user);
+		
+//		HttpHeaders headers2 = new HttpHeaders();
+//		headers2.add(JwtProperties.HEADER_STRING,JwtProperties.TOKEN_PREFIX+jwtTokenAndRefreshToken.get("jwtToken"));
+//		headers2.add("RefreshToken", "RefreshToken "+jwtTokenAndRefreshToken.get("refreshToken"));
+//		
+//		HttpEntity<MultiValueMap<String,String>> response2 = new HttpEntity<>(headers2);
+//		return response2;
+		
 	}
 	
 
