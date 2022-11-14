@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,7 +17,6 @@ import com.google.gson.JsonParser;
 import com.loginAPI.model.User;
 import com.loginAPI.oauth.KakaoOAuth2LoginService;
 import com.loginAPI.service.EmailAuthService;
-import com.loginAPI.service.KakaoLoginService;
 import com.loginAPI.service.PhoneAuthService;
 import com.loginAPI.service.RegisterService;
 import com.loginAPI.service.UserNameDuplicateCheckService;
@@ -41,6 +41,8 @@ public class LoginAPIController {
 
 	@PostMapping("/register")
 	public void register(User user) {
+		user.setProvider("LOCAL");
+		user.setProviderId("NULL");
 		registerService.register(user);
 	}
 	
@@ -66,7 +68,7 @@ public class LoginAPIController {
 	
 	@ResponseBody
 	@GetMapping("/auth/kakao/callback")
-	public ReponseEntity<?> kakaoLogin(@Param(value = "code")String code){
+	public ResponseEntity<?> kakaoLogin(@Param(value = "code")String code){
 		return kakaoOAuth2LoginService.getKakaoUserInfo(code);
 		
 	}

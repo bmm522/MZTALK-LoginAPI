@@ -19,10 +19,7 @@ public class RegisterServiceImpl implements RegisterService{
 
 
 	public void register(User user) {
-		System.out.println(user.getUsername());
 		user.setRole("ROLE_USER");
-		user.setProvider("LOCAL");
-		user.setProviderId("NULL");
 		user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
 
 		userRepository.save(user);
