@@ -18,7 +18,8 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter{
-	
+
+
 	@Autowired
 	private PrincipalSocialOAuth2UserService principalSocialOAuth2UserService;
 	
@@ -37,10 +38,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 		.addFilter(new LoginAuthenticationFilter(authenticationManager()))
 		.authorizeRequests()
 		.anyRequest().permitAll()
-		.and()
-		.oauth2Login()
-		.userInfoEndpoint()
-		.userService(principalSocialOAuth2UserService);
+		.and();
+//		.oauth
+//		.userInfoEndpoint()
+//		.userService(principalSocialOAuth2UserService);
 
 	}
 }
