@@ -3,7 +3,7 @@ package com.loginAPI.model;
 import lombok.Data;
 
 @Data
-public class OAuthToken {
+public class KakaoOAuthToken {
 	
 	private String access_token;
 	private String token_type;
