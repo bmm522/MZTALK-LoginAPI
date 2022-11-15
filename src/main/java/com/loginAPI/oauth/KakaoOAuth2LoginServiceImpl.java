@@ -28,11 +28,11 @@ import com.loginAPI.model.KakaoOAuthToken;
 import com.loginAPI.model.User;
 import com.loginAPI.properties.JwtProperties;
 import com.loginAPI.repository.UserRepository;
-import com.loginAPI.service.RegisterServiceImpl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@Service
 @Slf4j
 @RequiredArgsConstructor
 public class KakaoOAuth2LoginServiceImpl implements KakaoOAuth2LoginService{
@@ -43,67 +43,23 @@ public class KakaoOAuth2LoginServiceImpl implements KakaoOAuth2LoginService{
 	private final UserRepository userRepository;
 	
 	@Override
-	public ResponseEntity<?> getKakaoUserInfo(String code) {
-
-		KakaoOAuthToken kakaoOAuthToken= null;
-		try {
-			kakaoOAuthToken = getAccessToken(kakaoOAuthToken,code);
-		} catch (JsonMappingException e) {
-			log.error("JSON  and Entity don`t  match ");
-		} catch(JsonProcessingException e) {
-			log.error("JSON  Proccessiong error ");
-		}
-		return KakaoLogin( getKakaoUserInfoFromResourceServer(kakaoOAuthToken));
+	public  Map<String,String> getKakaoUserInfo(String accessToken) {
+	
+		ResponseEntity<String> response = getResponseForUserInfo(accessToken);
+		
+		return kakaoLogin(getKakaoUserInfoMap(response));
+		
 	}
 	
-
-
-	private KakaoOAuthToken getAccessToken(KakaoOAuthToken kakaoOAuthToken, String code) throws JsonMappingException, JsonProcessingException {
-		
+	private ResponseEntity<String> getResponseForUserInfo(String accessToken) {
 		HttpHeaders headers = new HttpHeaders();
+		headers.add("Authorization", "Bearer "+accessToken);
 		headers.add("Content-type","application/x-www-form-urlencoded;charset=utf-8");
-
-		ResponseEntity<String> response = getResponseForAccessToken(new HttpEntity<>(getBodyForAccessToken(code), headers));
-			
-		return new ObjectMapper().readValue(response.getBody(),KakaoOAuthToken.class);
-	}
-
-	private ResponseEntity<String> getResponseForAccessToken(HttpEntity kakaoAccessTokenRequest) {
-		return new RestTemplate().exchange(
-				"https://kauth.kakao.com/oauth/token",
-				HttpMethod.POST, 
-				kakaoAccessTokenRequest,
-				String.class
-				);
-	}
-
-	private MultiValueMap<String, String> getBodyForAccessToken(String code) {
-		MultiValueMap<String, String> body  = new LinkedMultiValueMap<>();
-		body.add("grant_type", "authorization_code");
-		body.add("client_id", "ef30b1afb54d83d8f24e7a0496ae9498");
-		body.add("redirect_uri", "http://localhost:8000/login-api/auth/kakao/callback");
-		body.add("code", code);
-		return body;
-	}
-	
-	private HashMap<String, String> getKakaoUserInfoFromResourceServer(KakaoOAuthToken kakaoOAuthToken) {
 		
-		HttpHeaders headers = new HttpHeaders();
-		headers.add("Authorization", "Bearer "+kakaoOAuthToken.getAccess_token());
-		headers.add("Content-type","application/x-www-form-urlencoded;charset=utf-8");
-
-		ResponseEntity<String> response = getResponseForUserInfo(new HttpEntity<>(headers));
-		
-		return getKakaoUserInfoMap(response);
-		
-
-	}
-	
-	private ResponseEntity<String> getResponseForUserInfo(HttpEntity kakaoUserInfoRequest) {
 		return new RestTemplate().exchange(
 				"https://kapi.kakao.com/v2/user/me",
 				HttpMethod.POST, 
-				kakaoUserInfoRequest,
+				new HttpEntity<>(headers),
 				String.class
 				);
 	}		
@@ -120,7 +76,7 @@ public class KakaoOAuth2LoginServiceImpl implements KakaoOAuth2LoginService{
 		return kakaoUserInfoMap;
 	}
 
-	private ResponseEntity<?> KakaoLogin(HashMap<String, String> kakaoUserInfoMap) {
+	private Map<String, String> kakaoLogin(HashMap<String, String> kakaoUserInfoMap) {
 		String provider = "KAKAO";
 		String providerId = kakaoUserInfoMap.get("id");
 		
@@ -141,19 +97,11 @@ public class KakaoOAuth2LoginServiceImpl implements KakaoOAuth2LoginService{
 			
 		}
 		
-		Map<String, String> jwtToken = new JwtTokenFactory().getJwtToken(user);
-		return postToFront(jwtToken);
+		return new JwtTokenFactory().getJwtToken(user);
+		
 	}
 
 
-
-	private ResponseEntity<?> postToFront(Map<String, String> jwtToken) {
-		HttpHeaders headers = new HttpHeaders();
-		headers.add(JwtProperties.HEADER_STRING, JwtProperties.TOKEN_PREFIX+jwtToken.get("jwtToken"));
-		headers.add("RefreshToken", "RefreshToken "+jwtToken.get("refreshToken"));
-		headers.setLocation(URI.create("http://127.0.0.1:5501/study_id_check.html"));
-		return new ResponseEntity<>(headers, HttpStatus.MOVED_PERMANENTLY);
-	}
 
 	
 }
