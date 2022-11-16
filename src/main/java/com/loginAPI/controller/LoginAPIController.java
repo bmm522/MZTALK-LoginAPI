@@ -2,36 +2,44 @@ package com.loginAPI.controller;
 
 import java.util.Map;
 
+import com.loginAPI.oauth.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.loginAPI.model.User;
-import com.loginAPI.oauth.KakaoOAuth2LoginService;
-import com.loginAPI.oauth.KakaoRedirectService;
 import com.loginAPI.service.EmailAuthService;
 import com.loginAPI.service.PhoneAuthService;
 import com.loginAPI.service.RegisterService;
 import com.loginAPI.service.UserNameDuplicateCheckService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.client.RestTemplate;
+
+import javax.ws.rs.GET;
 
 @RequestMapping("/login-api")
 @RestController
 @Slf4j
 public class LoginAPIController {
 	
-	
+
 	@Autowired
-	private KakaoRedirectService kakaoRedirectService;
+	private KakaoOAuth2LegacyLoginServiceImpl kakaoOAuth2LegacyLoginService;
+	@Autowired
+	private NaverOAuth2LoginService naverOAuth2LoginService;
+
+
+	@Autowired
+	private GoogleOAuth2LoginService googleOAuth2LoginService;
+
 	@Autowired
 	private KakaoOAuth2LoginService kakaoOAuth2LoginService;
 	@Autowired
@@ -69,33 +77,32 @@ public class LoginAPIController {
 		return phoneAuthService.phoneAuth(asString(phone,"phone"));
 
 	}
+
 	
-	@PostMapping("/test2")
-	public void test2() {
-		System.out.println("실행됨");
-	}
-	
-	
-	@ResponseBody
-	@PostMapping("/redirect/kakao")
-	public ResponseEntity<?> moveKakaoLoginRedirect() {
-		return kakaoRedirectService.moveKakaoLoginRedirect();
-	}
-	
-//	@ResponseBody
-//	@GetMapping("/auth/kakao/callback")
-//	public ResponseEntity<?> kakaoLogin(@Param(value = "code")String code){
-//		return kakaoOAuth2LoginService.getKakaoUserInfo(code);
-//		
-//	}
-	
+
 	@ResponseBody
 	@PostMapping("/oauth/kakao")
-	public Map<String,String> oauth2KakaoLogin(@RequestBody String accessToken){
-		System.out.println("실행됨");
+	public Map<String,String> oauthKakaoLogin(@RequestBody String accessToken){
 		return kakaoOAuth2LoginService.getKakaoUserInfo(asString(accessToken,"accessToken"));
 	}
 
+//	@ResponseBody
+//	@PostMapping("/oauth/google")
+//	public void oauth2GoogleLogin(@RequestBody String credential){
+//		googleOAuth2LoginService.getGoogleUserInfo(asString(credential,"credential"));
+//	}
+	@ResponseBody
+	@PostMapping("/oauth/naver")
+	public void oauthNaverLogin(@RequestBody String accessToken){
+		System.out.println(accessToken);
+		naverOAuth2LoginService.getNaverUserInfo(asString(accessToken, "accessToken"));
+	}
+
+	@GetMapping("/auth/kakao/callback")
+	public ResponseEntity<?> test(String code){
+		System.out.println("실행");
+		return kakaoOAuth2LegacyLoginService.getKakaoUserInfo(code);
+	}
 
 	
 	private String asString(String data,String dataname) {

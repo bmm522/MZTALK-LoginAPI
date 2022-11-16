@@ -35,14 +35,15 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
-public class KakaoOAuth2LegacyLoginServiceImpl implements KakaoOAuth2LoginService{
+@Service
+public class KakaoOAuth2LegacyLoginServiceImpl{
 
 	
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 	
 	private final UserRepository userRepository;
 	
-	@Override
+
 	public ResponseEntity<?> getKakaoUserInfo(String code) {
 
 		KakaoOAuthToken kakaoOAuthToken= null;
